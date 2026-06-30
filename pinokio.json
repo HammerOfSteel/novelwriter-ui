@@ -1,0 +1,6 @@
+{
+  "title": "NovelWriter UI",
+  "description": "AI-assisted novel writing web UI powered by Ollama. Write 70k-100k character novels locally: plot generation, character building, scene-by-scene writing.",
+  "icon": "icon.png",
+  "version": "7.0"
+}
