@@ -12,6 +12,18 @@
 	let error = '';
 	let modelsError = '';
 
+	// Debug mode is stored in localStorage independently of the settings save flow.
+	// This lets it work even without a project loaded.
+	let debugModeOn = false;
+	function toggleDebug() {
+		debugModeOn = !debugModeOn;
+		try { localStorage.setItem('debug_mode', debugModeOn ? 'true' : 'false'); } catch {}
+		settings.update((s) => s ? { ...s, DEBUG_MODE: debugModeOn } : s);
+		form = { ...form, DEBUG_MODE: debugModeOn };
+		// Best-effort save to backend (works even without a project)
+		api.saveSettings({ DEBUG_MODE: debugModeOn }).catch(() => {});
+	}
+
 	// Test-connection state
 	let testing = false;
 	let testResult: TestConnectionResult | null = null;
@@ -21,11 +33,14 @@
 	let installOutput = '';
 
 	onMount(async () => {
+		// Initialise debug toggle from localStorage immediately — no API call needed
+		try { debugModeOn = localStorage.getItem('debug_mode') === 'true'; } catch {}
+
 		try {
 			const [s, m] = await Promise.allSettled([api.getSettings(), api.models()]);
 			if (s.status === 'fulfilled') {
-				form = { ...s.value };
-				settings.set(s.value);
+				form = { ...s.value, DEBUG_MODE: debugModeOn }; // keep local toggle value
+				settings.set({ ...s.value, DEBUG_MODE: debugModeOn });
 			}
 			if (m.status === 'fulfilled') {
 				models = m.value.models;
@@ -98,14 +113,6 @@
 	}
 
 	const THINK_MODES = ['off', 'low', 'medium', 'high'];
-
-	// Persist debug mode to localStorage immediately on toggle — no project needed.
-	$: {
-		if (form.DEBUG_MODE !== undefined) {
-			try { localStorage.setItem('debug_mode', form.DEBUG_MODE ? 'true' : 'false'); } catch {}
-			settings.update((s) => s ? { ...s, DEBUG_MODE: form.DEBUG_MODE! } : s);
-		}
-	}
 	const LANGUAGES = ['English', 'Japanese'];
 
 	$: backendType = form.BACKEND_TYPE ?? 'ollama';
@@ -353,13 +360,14 @@
 		<section class="card p-5 space-y-4">
 			<h2 class="text-sm font-semibold text-ink-300 border-b border-border pb-2">Developer</h2>
 
-			<label class="flex items-center gap-3 cursor-pointer select-none">
+			<label class="flex items-center gap-3 cursor-pointer select-none" for="debug-mode">
 				<span class="relative inline-flex h-5 w-9 shrink-0">
 					<input
 						id="debug-mode"
 						type="checkbox"
 						class="peer sr-only"
-						bind:checked={form.DEBUG_MODE}
+						checked={debugModeOn}
+						on:change={toggleDebug}
 					/>
 					<!-- track -->
 					<span class="absolute inset-0 rounded-full bg-base-700 transition-colors
@@ -368,12 +376,12 @@
 					<span class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-ink-200 shadow
 						transition-transform peer-checked:translate-x-4"></span>
 				</span>
-				<span class="text-sm text-ink-300">Debug mode</span>
+				<span class="text-sm text-ink-300">Debug mode {debugModeOn ? '(on)' : '(off)'}</span>
 			</label>
 			<p class="text-[11px] text-ink-600 -mt-2 pl-12">
-				When on, the backend emits verbose trace logs to the uvicorn console and the
-				frontend logs all API calls and store state to the browser DevTools console.
-				A live state panel also appears on the Project page.
+				Saves to browser storage — no project needed. When on, the backend emits verbose
+				trace logs to the uvicorn console and the frontend logs all API calls and store
+				state to the browser DevTools console. A live state panel appears on the Project page.
 			</p>
 		</section>
 

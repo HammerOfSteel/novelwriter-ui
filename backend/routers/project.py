@@ -232,7 +232,7 @@ def _load_project_state(path: str) -> dict:
 
 
 @router.get("/project/state")
-async def get_project_state():
+def get_project_state():
     """Return the current project state (or {loaded: false})."""
     if not state.current_project_path:
         dlog("project.state", loaded=False)
@@ -242,7 +242,7 @@ async def get_project_state():
 
 
 @router.post("/project/new")
-async def new_project(body: NewProjectBody):
+def new_project(body: NewProjectBody):
     """
     Create a brand-new project folder, save the idea, and set it as current.
     The frontend should follow up with POST /api/init to start generation.
@@ -282,7 +282,7 @@ async def new_project(body: NewProjectBody):
 
 
 @router.post("/project/load")
-async def load_project(body: LoadProjectBody):
+def load_project(body: LoadProjectBody):
     """
     Load an existing NovelWriter project directory.
     Returns 422 if the directory looks like a generic writing folder (use /import instead).
@@ -320,7 +320,7 @@ async def load_project(body: LoadProjectBody):
 
 
 @router.post("/project/scan")
-async def scan_project(body: ScanBody):
+def scan_project(body: ScanBody):
     """
     Non-destructive scan of a directory.
     Returns structure info so the UI can decide whether to load or import.
@@ -329,7 +329,7 @@ async def scan_project(body: ScanBody):
 
 
 @router.post("/project/import")
-async def import_project(body: ImportBody):
+def import_project(body: ImportBody):
     """
     Import a generic writing directory (folders of .md files).
 
@@ -422,10 +422,11 @@ async def import_project(body: ImportBody):
         scene_id += 1
 
     # Save import metadata so the analyze job can access it
+    # Cap content_samples so import_meta.json stays manageable for large books
     meta = {
         "source_path": source_path,
         "scan": scan,
-        "content_samples": content_samples,
+        "content_samples": content_samples[:50],
     }
     with open(os.path.join(project_path, "import_meta.json"), "w", encoding="utf-8") as f:
         json.dump(meta, f, indent=2, ensure_ascii=False)
@@ -447,14 +448,14 @@ async def import_project(body: ImportBody):
 
 
 @router.post("/project/close")
-async def close_project():
+def close_project():
     """Unload the current project."""
     state.current_project_path = None
     return {"success": True}
 
 
 @router.get("/project/browse")
-async def browse_folder():
+def browse_folder():
     """
     Open the OS native folder-picker dialog and return the chosen path.
     macOS: osascript   |   Linux: zenity / kdialog   |   Windows: PowerShell

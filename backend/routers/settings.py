@@ -29,7 +29,7 @@ class SettingsBody(BaseModel):
 
 
 @router.get("/settings")
-async def get_settings():
+def get_settings():
     """Return current effective configuration plus the active project path."""
     return {
         **get_current_config(),
@@ -38,22 +38,29 @@ async def get_settings():
 
 
 @router.post("/settings")
-async def update_settings(body: SettingsBody):
+def update_settings(body: SettingsBody):
     """
     Persist settings to the project's config_override.json and apply them.
-    Requires a project to be loaded.
+    Global-only fields (DEBUG_MODE) are applied to Config even without a project.
     """
     project = state.current_project_path
-    if not project:
-        raise HTTPException(
-            status_code=400,
-            detail="No project loaded. Settings are saved per-project.",
-        )
 
     # Only save fields that were explicitly provided (non-None)
     data = {k: v for k, v in body.dict().items() if v is not None}
     if not data:
         raise HTTPException(status_code=400, detail="No settings provided.")
+
+    # DEBUG_MODE can always be applied in-memory (no project needed)
+    if "DEBUG_MODE" in data and not project:
+        from config import Config  # noqa: PLC0415
+        Config.DEBUG_MODE = bool(data["DEBUG_MODE"])
+        return {"success": True, "saved": {"DEBUG_MODE": data["DEBUG_MODE"]}, "config": get_current_config()}
+
+    if not project:
+        raise HTTPException(
+            status_code=400,
+            detail="No project loaded. Settings are saved per-project.",
+        )
 
     save_override(project, data)
     apply_config(project)
