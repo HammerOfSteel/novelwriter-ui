@@ -180,7 +180,8 @@ Instructions:
 - Include dialogue, internal monologue, sensory details, and meaningful action.
 - Do NOT add a title header.
 - Write in English."""
-        return self.client.generate_text(prompt)
+        # Prompt overhead is ~1500 tokens; give 4000 tokens for actual prose
+        return self.client.generate_text(prompt, max_tokens=4000)
 
     def generate_title(self, scene_text: str) -> str:
         prompt = f"""Write a short, evocative title (3–7 words) for this scene.
