@@ -18,11 +18,9 @@ module.exports = {
     {
       method: "shell.run",
       params: {
+        venv: "env",
         message: "uv pip install -r requirements.txt",
-        path: ".",
-        env: {
-          VIRTUAL_ENV: "{{path.app}}/env"
-        }
+        path: "."
       }
     },
     {

@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.join(_ROOT, "novelwriter"))
 
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -36,11 +36,16 @@ class SPAStaticFiles(StaticFiles):
 
     async def get_response(self, path: str, scope: Scope):  # type: ignore[override]
         try:
-            return await super().get_response(path, scope)
+            response = await super().get_response(path, scope)
         except StarletteHTTPException as exc:
             if exc.status_code == 404:
-                return await super().get_response("index.html", scope)
-            raise
+                response = await super().get_response("index.html", scope)
+            else:
+                raise
+        # Never cache index.html so the browser always picks up rebuilt assets
+        if path in ("", "index.html"):
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        return response
 
 # ---------------------------------------------------------------------------
 # App
