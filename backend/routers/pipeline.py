@@ -18,6 +18,7 @@ from pydantic import BaseModel
 
 import backend.state as state
 from backend.config_manager import get_current_config
+from backend.debug_logger import dlog
 
 router = APIRouter()
 
@@ -274,8 +275,10 @@ def _assert_project():
 
 def _submit(func, *args, name: str):
     runner = state.get_job_runner()
+    dlog("pipeline.submit", job=name, project=state.current_project_path)
     ok = runner.submit(func, *args, name=name)
     if not ok:
+        dlog("pipeline.submit", job=name, rejected=True, running=runner.job_name)
         raise HTTPException(status_code=409, detail="Another job is already running.")
     return {"queued": True, "job": name}
 

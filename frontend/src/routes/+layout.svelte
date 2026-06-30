@@ -9,22 +9,32 @@
 		jobStatus,
 		jobLogs,
 		appendLog,
-		isJobRunning
+		isJobRunning,
+		debugMode,
+		settings
 	} from '$lib/stores';
 	import { api } from '$lib/api';
 
-	// Bootstrap: fetch status and project state on first load
+	// Bootstrap: fetch status, project state, and settings on first load
 	onMount(async () => {
 		try {
-			const [status, proj] = await Promise.all([api.status(), api.projectState()]);
+			const [status, proj, cfg] = await Promise.all([
+				api.status(),
+				api.projectState(),
+				api.getSettings()
+			]);
 			sysStatus.set(status);
 			project.set(proj);
+			settings.set(cfg);
 		} catch {
 			// Backend might not be ready yet
 		}
 
-		// Start SSE connection
+		// Keep debugMode store subscribed so its localStorage side-effect stays active
+		const unsub = debugMode.subscribe(() => {});
+		// connectSSE after initial data fetch
 		connectSSE();
+		return unsub;
 	});
 
 	let sseSource: EventSource | null = null;
@@ -37,6 +47,12 @@
 			try {
 				const item = JSON.parse(e.data);
 				if (item.type === 'heartbeat') return;
+
+				// Debug: log every SSE event when debug mode is on
+				if (localStorage.getItem('debug_mode') === 'true') {
+					// eslint-disable-next-line no-console
+					console.debug('[SSE]', item.type, item.message ?? '');
+				}
 
 				appendLog(item);
 
@@ -53,6 +69,10 @@
 		};
 
 		sseSource.onerror = () => {
+			if (localStorage.getItem('debug_mode') === 'true') {
+				// eslint-disable-next-line no-console
+				console.debug('[SSE] connection error — reconnecting in 3s');
+			}
 			// Reconnect after a short delay
 			sseSource?.close();
 			setTimeout(connectSSE, 3000);

@@ -12,6 +12,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
 
 import backend.state as state
+from backend.debug_logger import dlog
 
 router = APIRouter()
 
@@ -29,10 +30,13 @@ async def stream_logs():
       {"type": "heartbeat"}
     """
     runner = state.get_job_runner()
+    dlog("sse", event="connect", job=runner.job_name, is_running=runner.is_running)
 
     async def _generate():
         for item in runner.sse_generator():
+            dlog("sse", event="emit", type=item.get("type"))
             yield f"data: {json.dumps(item)}\n\n"
+        dlog("sse", event="disconnect")
 
     return StreamingResponse(
         _generate(),

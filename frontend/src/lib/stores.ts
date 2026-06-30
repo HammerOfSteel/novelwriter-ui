@@ -42,6 +42,15 @@ export const isJobRunning = derived(jobStatus, ($j) => $j.is_running);
 // ---------------------------------------------------------------------------
 export const settings = writable<Settings | null>(null);
 
+// Derived: whether debug mode is active.
+// Also mirrors the value in localStorage so api.ts can read it without
+// importing a Svelte store (avoids circular deps).
+export const debugMode = derived(settings, ($s) => {
+	const on = $s?.DEBUG_MODE ?? false;
+	try { localStorage.setItem('debug_mode', on ? 'true' : 'false'); } catch { /* SSR */ }
+	return on;
+});
+
 // ---------------------------------------------------------------------------
 // UI state
 // ---------------------------------------------------------------------------

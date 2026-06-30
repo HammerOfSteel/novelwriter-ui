@@ -341,6 +341,34 @@
 			</div>
 		</section>
 
+		<!-- DEVELOPER / DEBUG -->
+		<section class="card p-5 space-y-4">
+			<h2 class="text-sm font-semibold text-ink-300 border-b border-border pb-2">Developer</h2>
+
+			<label class="flex items-center gap-3 cursor-pointer select-none">
+				<span class="relative inline-flex h-5 w-9 shrink-0">
+					<input
+						id="debug-mode"
+						type="checkbox"
+						class="peer sr-only"
+						bind:checked={form.DEBUG_MODE}
+					/>
+					<!-- track -->
+					<span class="absolute inset-0 rounded-full bg-base-700 transition-colors
+						peer-checked:bg-violet-600"></span>
+					<!-- thumb -->
+					<span class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-ink-200 shadow
+						transition-transform peer-checked:translate-x-4"></span>
+				</span>
+				<span class="text-sm text-ink-300">Debug mode</span>
+			</label>
+			<p class="text-[11px] text-ink-600 -mt-2 pl-12">
+				When on, the backend emits verbose trace logs to the uvicorn console and the
+				frontend logs all API calls and store state to the browser DevTools console.
+				A live state panel also appears on the Project page.
+			</p>
+		</section>
+
 		{#if error}
 			<p class="text-xs text-red-400 bg-red-950/30 border border-red-800/30 rounded-lg px-3 py-2">
 				{error}

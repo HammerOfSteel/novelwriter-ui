@@ -13,6 +13,8 @@ import threading
 import traceback
 from typing import Callable, Iterator, Optional
 
+from backend.debug_logger import dlog
+
 
 class JobStatus:
     IDLE = "idle"
@@ -75,20 +77,25 @@ class JobRunner:
         """
         with self._lock:
             if self._status == JobStatus.RUNNING:
+                dlog("job_runner.submit", rejected=True, running_job=self._job_name)
                 return False
             self._status = JobStatus.RUNNING
             self._job_name = name
             self._error = None
             self._drain_queue()
+            dlog("job_runner.submit", accepted=True, name=name)
 
         def _run() -> None:
             try:
+                dlog("job_runner.run", phase="start", name=name)
                 func(self.log, *args, **kwargs)
+                dlog("job_runner.run", phase="done", name=name)
                 self._enqueue({"type": "done", "message": "Job complete."})
                 self._status = JobStatus.DONE
             except Exception as exc:  # noqa: BLE001
                 detail = traceback.format_exc()
                 self._error = str(exc)
+                dlog("job_runner.run", phase="error", name=name, error=str(exc))
                 self._enqueue({"type": "error", "message": f"{exc}\n\n{detail}"})
                 self._status = JobStatus.ERROR
 

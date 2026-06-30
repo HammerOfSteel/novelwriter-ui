@@ -21,6 +21,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.types import Scope
 
 from backend.routers import status, ollama, project, pipeline, settings, stream, test_connection
+from backend.debug_logger import dlog
 
 
 # ---------------------------------------------------------------------------
@@ -77,6 +78,15 @@ app.include_router(project.router, prefix="/api", tags=["project"])
 app.include_router(pipeline.router, prefix="/api", tags=["pipeline"])
 app.include_router(settings.router, prefix="/api", tags=["settings"])
 app.include_router(stream.router, prefix="/api", tags=["stream"])
+
+
+@app.on_event("startup")
+async def _on_startup():
+    import logging
+    logging.getLogger("novelwriter.debug").setLevel(logging.DEBUG)
+    # Ensure uvicorn propagates debug logs
+    logging.getLogger("uvicorn").setLevel(logging.INFO)
+    dlog("server", event="startup", root=str(_ROOT))
 
 # ---------------------------------------------------------------------------
 # Static file serving (SPA fallback)

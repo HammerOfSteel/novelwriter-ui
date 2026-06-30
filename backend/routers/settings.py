@@ -21,6 +21,7 @@ class SettingsBody(BaseModel):
     API_URL: Optional[str] = None
     API_KEY: Optional[str] = None
     API_MODEL: Optional[str] = None
+    DEBUG_MODE: Optional[bool] = None
     NOVEL_VIEWPOINT: Optional[str] = None
     NOVEL_STYLE: Optional[str] = None
     MAX_CONTEXT_CHARS: Optional[int] = None

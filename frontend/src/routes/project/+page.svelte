@@ -2,10 +2,11 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { api } from '$lib/api';
-	import { project, jobStatus, isJobRunning, clearLogs } from '$lib/stores';
+	import { project, jobStatus, isJobRunning, clearLogs, debugMode } from '$lib/stores';
 	import StageIndicator from '$lib/components/StageIndicator.svelte';
 	import OutlineGrid from '$lib/components/OutlineGrid.svelte';
 	import LogPanel from '$lib/components/LogPanel.svelte';
+	import DebugPanel from '$lib/components/DebugPanel.svelte';
 
 	$: p = $project;
 	$: stage = p.stage ?? null;
@@ -330,3 +331,5 @@
 
 	</div>
 {/if}
+
+<DebugPanel />

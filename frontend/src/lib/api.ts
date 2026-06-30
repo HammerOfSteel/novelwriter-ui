@@ -6,10 +6,23 @@
 
 const BASE = '/api';
 
+/** Emit a debug log if DEBUG_MODE is on in settings. */
+function _dbg(label: string, data?: unknown): void {
+	try {
+		const raw = localStorage.getItem('debug_mode');
+		if (raw !== 'true') return;
+	} catch {
+		return;
+	}
+	// eslint-disable-next-line no-console
+	console.debug(`[API] ${label}`, data !== undefined ? data : '');
+}
+
 async function _fetch<T>(
 	path: string,
 	init?: RequestInit
 ): Promise<T> {
+	_dbg(`→ ${init?.method ?? 'GET'} ${path}`, init?.body ? JSON.parse(init.body as string) : undefined);
 	const res = await fetch(BASE + path, {
 		headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
 		...init
@@ -22,9 +35,12 @@ async function _fetch<T>(
 		} catch {
 			message = await res.text();
 		}
+		_dbg(`✗ ${path}`, message);
 		throw new Error(message);
 	}
-	return res.json() as Promise<T>;
+	const data = await res.json() as T;
+	_dbg(`← ${path}`, data);
+	return data;
 }
 
 const post = <T>(path: string, body?: unknown) =>
@@ -111,6 +127,7 @@ export interface Settings {
 	API_URL: string;
 	API_KEY: string;
 	API_MODEL: string;
+	DEBUG_MODE: boolean;
 	NOVEL_VIEWPOINT: string;
 	NOVEL_STYLE: string;
 	MAX_CONTEXT_CHARS: number;

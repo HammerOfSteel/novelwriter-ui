@@ -15,6 +15,8 @@ CONFIG_FILENAME = "config_override.json"
 DEFAULTS: Dict[str, Any] = {
     # Backend selection
     "BACKEND_TYPE": "ollama",
+    # Debug
+    "DEBUG_MODE": False,
     # Ollama
     "OLLAMA_BASE_URL": "http://localhost:11434",
     "DEFAULT_MODEL": "",
@@ -99,6 +101,7 @@ def get_current_config() -> Dict[str, Any]:
         Cfg = nw_config.Config
         return {
             "BACKEND_TYPE": getattr(Cfg, "BACKEND_TYPE", "ollama"),
+            "DEBUG_MODE": getattr(Cfg, "DEBUG_MODE", False),
             "OLLAMA_BASE_URL": Cfg.OLLAMA_BASE_URL,
             "DEFAULT_MODEL": Cfg.DEFAULT_MODEL,
             "CONTEXT_LENGTH_SIZE": Cfg.CONTEXT_LENGTH_SIZE,

@@ -24,6 +24,7 @@ from pydantic import BaseModel
 
 import backend.state as state
 from backend.config_manager import apply_config, save_override
+from backend.debug_logger import dlog
 
 router = APIRouter()
 
@@ -234,7 +235,9 @@ def _load_project_state(path: str) -> dict:
 async def get_project_state():
     """Return the current project state (or {loaded: false})."""
     if not state.current_project_path:
+        dlog("project.state", loaded=False)
         return {"loaded": False}
+    dlog("project.state", loaded=True, path=state.current_project_path)
     return _load_project_state(state.current_project_path)
 
 
@@ -285,6 +288,7 @@ async def load_project(body: LoadProjectBody):
     Returns 422 if the directory looks like a generic writing folder (use /import instead).
     """
     path = os.path.expanduser(body.path.strip())
+    dlog("project.load", path=path)
 
     if not os.path.isdir(path):
         raise HTTPException(status_code=404, detail="Directory not found")
@@ -335,6 +339,7 @@ async def import_project(body: ImportBody):
     and world from the existing content.
     """
     source_path = os.path.expanduser(body.source_path.strip())
+    dlog("project.import", source_path=source_path, project_name=body.project_name)
 
     if not os.path.isdir(source_path):
         raise HTTPException(status_code=404, detail="Source directory not found")
