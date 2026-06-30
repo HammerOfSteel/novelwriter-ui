@@ -163,7 +163,7 @@ def _detect_stage(path: str) -> str:
         return "outline"
     if has_any_scene:
         return "write"
-    return "outline"
+    return "write"   # outline exists, no scenes yet — ready to start writing
 
 
 def _load_project_state(path: str) -> dict:
