@@ -313,6 +313,19 @@
 					>
 						↺ Refresh
 					</button>
+
+					{#if $isJobRunning}
+						<button
+							class="btn-ghost text-xs text-amber-400/70 hover:text-amber-400"
+							title="Force-clear a stuck job state"
+							on:click={async () => {
+								await api.resetJob();
+								jobStatus.update((s) => ({ ...s, status: 'idle', is_running: false }));
+							}}
+						>
+							⚡ Reset stuck job
+						</button>
+					{/if}
 				</div>
 
 				{#if actionError}

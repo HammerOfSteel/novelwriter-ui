@@ -193,6 +193,7 @@ export const api = {
 	testConnection: (body: { BACKEND_TYPE?: string; OLLAMA_BASE_URL?: string; API_URL?: string; API_KEY?: string }) =>
 		post<TestConnectionResult>('/test-connection', body),
 
-	// Job status
-	jobStatus: () => get<JobStatus>('/job/status')
+	// Job status & control
+	jobStatus: () => get<JobStatus>('/job/status'),
+	resetJob: () => post<{ ok: boolean; was: string }>('/job/reset'),
 };

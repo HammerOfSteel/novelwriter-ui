@@ -98,6 +98,14 @@
 	}
 
 	const THINK_MODES = ['off', 'low', 'medium', 'high'];
+
+	// Persist debug mode to localStorage immediately on toggle — no project needed.
+	$: {
+		if (form.DEBUG_MODE !== undefined) {
+			try { localStorage.setItem('debug_mode', form.DEBUG_MODE ? 'true' : 'false'); } catch {}
+			settings.update((s) => s ? { ...s, DEBUG_MODE: form.DEBUG_MODE! } : s);
+		}
+	}
 	const LANGUAGES = ['English', 'Japanese'];
 
 	$: backendType = form.BACKEND_TYPE ?? 'ollama';
