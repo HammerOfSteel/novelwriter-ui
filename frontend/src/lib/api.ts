@@ -200,6 +200,12 @@ export const api = {
 	reconstruct: (scene_id: number) =>
 		post<{ queued: boolean; job: string }>('/reconstruct', { scene_id }),
 	analyze: () => post<{ queued: boolean; job: string }>('/analyze'),
+	// Regen / delete individual artifacts
+	regenPlot: () => post<{ queued: boolean; job: string }>('/regen/plot'),
+	regenOutline: () => post<{ queued: boolean; job: string }>('/regen/outline'),
+	regenScene: (id: number) => post<{ queued: boolean; job: string }>(`/regen/scene/${id}`),
+	deleteScene: (id: number) =>
+		_fetch<{ deleted: string[] }>(`/scene/${id}`, { method: 'DELETE' }),
 
 	// Settings
 	getSettings: () => get<Settings>('/settings'),

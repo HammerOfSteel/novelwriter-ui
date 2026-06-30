@@ -313,8 +313,14 @@
 							<!-- Plot preview -->
 							{#if detail.plot_preview}
 								<div class="card overflow-hidden">
-									<div class="px-4 py-2.5 bg-base-800 border-b border-border">
+									<div class="px-4 py-2.5 bg-base-800 border-b border-border flex items-center justify-between">
 										<h3 class="text-xs font-semibold text-ink-300 uppercase tracking-widest">Plot</h3>
+										<button
+											class="text-[10px] px-2 py-0.5 rounded bg-violet-900/30 text-violet-400
+											       hover:bg-violet-800/40 hover:text-violet-200 disabled:opacity-30"
+											disabled={$isJobRunning}
+											on:click={() => runAction(api.regenPlot)}
+											title="Regenerate plot, characters & world">↺ Regen</button>
 									</div>
 									<div class="p-4">
 										<p class="text-sm text-ink-300 leading-relaxed whitespace-pre-wrap line-clamp-6">
@@ -327,7 +333,7 @@
 							<!-- Characters -->
 							{#if (detail.characters?.length ?? 0) > 0}
 								<div class="card overflow-hidden">
-									<div class="px-4 py-2.5 bg-base-800 border-b border-border">
+									<div class="px-4 py-2.5 bg-base-800 border-b border-border flex items-center justify-between">
 										<h3 class="text-xs font-semibold text-ink-300 uppercase tracking-widest">
 											Characters ({detail.characters?.length})
 										</h3>
@@ -345,14 +351,26 @@
 							<!-- Outline -->
 							{#if (detail.outline?.length ?? 0) > 0}
 								<div class="card overflow-hidden">
-									<div class="px-4 py-2.5 bg-base-800 border-b border-border">
+									<div class="px-4 py-2.5 bg-base-800 border-b border-border flex items-center justify-between">
 										<h3 class="text-xs font-semibold text-ink-300 uppercase tracking-widest">Outline</h3>
+										<button
+											class="text-[10px] px-2 py-0.5 rounded bg-violet-900/30 text-violet-400
+											       hover:bg-violet-800/40 hover:text-violet-200 disabled:opacity-30"
+											disabled={$isJobRunning}
+											on:click={() => runAction(api.regenOutline)}
+											title="Regenerate entire outline">↺ Regen</button>
 									</div>
 									<div class="p-4">
 										<OutlineGrid
 											outline={detail.outline ?? []}
 											projectPath={detail.path ?? ''}
 											writtenSceneIds={computedWrittenIds}
+											jobRunning={$isJobRunning}
+											onRegenScene={(id) => runAction(() => api.regenScene(id))}
+											onDeleteScene={async (id) => {
+												await api.deleteScene(id);
+												refreshDetail();
+											}}
 										/>
 									</div>
 								</div>

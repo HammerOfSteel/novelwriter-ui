@@ -92,6 +92,56 @@ def _job_outline(log, language: str) -> None:
     log(f"Outline generated: {len(outline)} chapter(s).")
 
 
+def _job_regen_scene(log, target_scene_id: int, language: str) -> None:
+    """Re-write a specific scene by ID (assumes file was already deleted)."""
+    Gen = _get_generator(language)
+    gen = Gen()
+
+    from state_manager import StateManager  # noqa: PLC0415
+    from config import Config  # noqa: PLC0415
+    sm = StateManager()
+
+    outline = sm.load_outline()
+    if not outline:
+        raise RuntimeError("No outline found.")
+
+    characters = sm.load_characters()
+    world = sm.load_world()
+    current_state = sm.load_state() or {}
+
+    # Walk scenes in order, accumulating previous_summary until we reach the target
+    previous_summary = ""
+    target_scene = None
+
+    for chapter in outline:
+        for scene in chapter.get("scenes", []):
+            sid = scene.get("scene_id")
+            if sid == target_scene_id:
+                target_scene = scene
+                break
+            summary_file = os.path.join(Config.DRAFTS_DIR, f"scene_{sid}_summary.txt")
+            if os.path.exists(summary_file):
+                previous_summary = open(summary_file, encoding="utf-8").read()
+        if target_scene:
+            break
+
+    if not target_scene:
+        raise RuntimeError(f"Scene {target_scene_id} not found in outline.")
+
+    log(f"Re-writing scene {target_scene_id}…")
+    scene_text = gen.write_scene(target_scene, previous_summary, characters, world, current_state)
+
+    log("Generating title…")
+    title = gen.generate_title(scene_text)
+    scene_file = os.path.join(Config.DRAFTS_DIR, f"scene_{target_scene_id}.md")
+    sm.save_text(scene_file, f"# {title}\n\n{scene_text}")
+
+    log("Summarising scene…")
+    summary = gen.summarize_scene(scene_text)
+    sm.save_text(os.path.join(Config.DRAFTS_DIR, f"scene_{target_scene_id}_summary.txt"), summary)
+    log(f"Scene {target_scene_id} rewritten.")
+
+
 def _job_write(log, count: int, language: str) -> None:
     """Write the next `count` unwritten scenes."""
     Gen = _get_generator(language)
@@ -342,3 +392,69 @@ async def analyze_import():
     """Queue: extract plot/characters/world from imported content."""
     _assert_project()
     return _submit(_job_analyze, name="analyze")
+
+
+# ---------------------------------------------------------------------------
+# Regenerate / delete individual artifacts
+# ---------------------------------------------------------------------------
+
+@router.delete("/scene/{scene_id}")
+def delete_scene(scene_id: int):
+    """Delete a written scene file — marks it as pending again."""
+    _assert_project()
+    from config import Config  # noqa: PLC0415
+    deleted = []
+    for fname in [f"scene_{scene_id}.md", f"scene_{scene_id}_summary.txt"]:
+        fpath = os.path.join(Config.DRAFTS_DIR, fname)
+        if os.path.exists(fpath):
+            os.remove(fpath)
+            deleted.append(fname)
+    return {"deleted": deleted}
+
+
+@router.post("/regen/scene/{scene_id}")
+async def regen_scene(scene_id: int):
+    """Delete a scene file then re-write it as a background job."""
+    _assert_project()
+    from config import Config  # noqa: PLC0415
+    for fname in [f"scene_{scene_id}.md", f"scene_{scene_id}_summary.txt"]:
+        fpath = os.path.join(Config.DRAFTS_DIR, fname)
+        if os.path.exists(fpath):
+            os.remove(fpath)
+    cfg = get_current_config()
+    return _submit(
+        _job_regen_scene, scene_id, cfg.get("NOVEL_LANGUAGE", "English"),
+        name=f"regen_scene_{scene_id}",
+    )
+
+
+@router.post("/regen/plot")
+async def regen_plot():
+    """Delete plot / characters / world then re-run init."""
+    _assert_project()
+    path = state.current_project_path
+    for fname in ["plot.md", "characters.json", "world.json"]:
+        fpath = os.path.join(path, fname)
+        if os.path.exists(fpath):
+            os.remove(fpath)
+    idea = ""
+    idea_file = os.path.join(path, "idea.md")
+    if os.path.exists(idea_file):
+        with open(idea_file, "r", encoding="utf-8") as f:
+            idea = f.read().strip()
+    if not idea:
+        raise HTTPException(status_code=400, detail="No idea.md found for this project.")
+    cfg = get_current_config()
+    return _submit(_job_init, idea, cfg.get("NOVEL_LANGUAGE", "English"), name="regen_plot")
+
+
+@router.post("/regen/outline")
+async def regen_outline():
+    """Delete outline.json then re-generate it."""
+    _assert_project()
+    path = state.current_project_path
+    outline_file = os.path.join(path, "outline.json")
+    if os.path.exists(outline_file):
+        os.remove(outline_file)
+    cfg = get_current_config()
+    return _submit(_job_outline, cfg.get("NOVEL_LANGUAGE", "English"), name="regen_outline")
