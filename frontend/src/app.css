@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	* {
+		box-sizing: border-box;
+	}
+
+	html {
+		scroll-behavior: smooth;
+	}
+
+	/* Scrollbar styling */
+	::-webkit-scrollbar {
+		width: 6px;
+		height: 6px;
+	}
+	::-webkit-scrollbar-track {
+		background: #10101c;
+	}
+	::-webkit-scrollbar-thumb {
+		background: #252540;
+		border-radius: 3px;
+	}
+	::-webkit-scrollbar-thumb:hover {
+		background: #7c3aed;
+	}
+
+	/* Focus ring */
+	*:focus-visible {
+		outline: 2px solid #7c3aed;
+		outline-offset: 2px;
+	}
+}
+
+@layer components {
+	/* Card */
+	.card {
+		@apply bg-base-900 border border-border rounded-xl;
+	}
+
+	/* Buttons */
+	.btn {
+		@apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+		       transition-all duration-150 focus-visible:ring-2 focus-visible:ring-violet-500
+		       disabled:opacity-40 disabled:cursor-not-allowed;
+	}
+	.btn-primary {
+		@apply btn bg-violet-600 hover:bg-violet-700 text-white;
+	}
+	.btn-secondary {
+		@apply btn bg-base-800 hover:bg-base-700 text-ink-100 border border-border;
+	}
+	.btn-ghost {
+		@apply btn hover:bg-base-800 text-ink-300;
+	}
+	.btn-danger {
+		@apply btn bg-red-900/40 hover:bg-red-800/50 text-red-400 border border-red-800/40;
+	}
+
+	/* Form inputs */
+	.input {
+		@apply w-full bg-base-800 border border-border rounded-lg px-3 py-2 text-sm text-ink-100
+		       placeholder-ink-500 focus:outline-none focus:border-violet-600 focus:ring-1
+		       focus:ring-violet-600 transition-colors;
+	}
+	.textarea {
+		@apply input resize-none;
+	}
+	.label {
+		@apply block text-xs font-medium text-ink-300 mb-1.5 uppercase tracking-wide;
+	}
+
+	/* Stage badge */
+	.stage-badge {
+		@apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+	}
+
+	/* Log line */
+	.log-line {
+		@apply font-mono text-xs leading-relaxed text-ink-300;
+	}
+	.log-line.error {
+		@apply text-red-400;
+	}
+	.log-line.done {
+		@apply text-green-400 font-medium;
+	}
+}
+
+/* Spinner */
+@keyframes spin {
+	to { transform: rotate(360deg); }
+}
+.spinner {
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+	border: 2px solid currentColor;
+	border-top-color: transparent;
+	border-radius: 50%;
+	animation: spin 0.7s linear infinite;
+}

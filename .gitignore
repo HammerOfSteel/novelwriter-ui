@@ -3,6 +3,7 @@ env/
 __pycache__/
 *.pyc
 .pytest_cache/
+*.egg-info/
 
 # Node
 frontend/node_modules/
@@ -11,3 +12,10 @@ frontend/.svelte-kit/
 
 # Runtime
 *.json.tmp
+config_override.json
+
+# User project data (stored outside the install dir by default)
+# ~/NovelWriter/ is not inside this repo — nothing to ignore here
+
+# macOS
+.DS_Store
