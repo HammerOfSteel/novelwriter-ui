@@ -393,7 +393,7 @@
 
 		<div class="flex items-center gap-3">
 			<button class="btn-primary" on:click={save}
-				disabled={saving || !form.project_path}>
+				disabled={saving}>
 				{#if saving}
 					<span class="spinner w-4 h-4"></span>Saving…
 				{:else}
@@ -402,11 +402,7 @@
 			</button>
 
 			{#if saveSuccess}
-				<span class="text-xs text-green-400 animate-fade-in">✓ Saved</span>
-			{/if}
-
-			{#if !form.project_path}
-				<span class="text-xs text-amber-400">No project loaded — open a project to save.</span>
+				<span class="text-xs text-green-400 animate-fade-in">✓ Saved globally</span>
 			{/if}
 		</div>
 

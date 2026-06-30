@@ -11,6 +11,10 @@ from typing import Any, Dict
 
 CONFIG_FILENAME = "config_override.json"
 
+# Global settings file — persists across server restarts, shared by all projects
+_GLOBAL_CONFIG_DIR = os.path.expanduser("~/NovelWriter")
+_GLOBAL_CONFIG_PATH = os.path.join(_GLOBAL_CONFIG_DIR, ".nwui_global.json")
+
 # Default values mirroring Config class defaults (English-first)
 DEFAULTS: Dict[str, Any] = {
     # Backend selection
@@ -65,6 +69,45 @@ def save_override(project_path: str, data: Dict[str, Any]) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Global config (survives server restarts, no project needed)
+# ---------------------------------------------------------------------------
+
+def load_global_config() -> Dict[str, Any]:
+    """Load the global config from ~/NovelWriter/.nwui_global.json."""
+    if os.path.exists(_GLOBAL_CONFIG_PATH):
+        try:
+            with open(_GLOBAL_CONFIG_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError):
+            pass
+    return {}
+
+
+def save_global_config(data: Dict[str, Any]) -> None:
+    """Merge `data` into the global config file."""
+    os.makedirs(_GLOBAL_CONFIG_DIR, exist_ok=True)
+    existing = load_global_config()
+    existing.update({k: v for k, v in data.items() if v is not None})
+    with open(_GLOBAL_CONFIG_PATH, "w", encoding="utf-8") as f:
+        json.dump(existing, f, indent=2, ensure_ascii=False)
+
+
+def apply_global_config() -> None:
+    """Apply global settings to Config on startup (before any project is loaded)."""
+    cfg = load_global_config()
+    if not cfg:
+        return
+    try:
+        import config as nw_config  # noqa: PLC0415
+        Cfg = nw_config.Config
+    except ImportError:
+        return
+    for key, value in cfg.items():
+        if hasattr(Cfg, key):
+            setattr(Cfg, key, value)
+
+
+# ---------------------------------------------------------------------------
 # Runtime patching
 # ---------------------------------------------------------------------------
 
@@ -72,8 +115,9 @@ def save_override(project_path: str, data: Dict[str, Any]) -> None:
 def apply_config(project_path: str) -> None:
     """
     Patch the NovelWriter Config class in-place:
-    1. Set all path attributes to point at `project_path`.
-    2. Apply any values from config_override.json.
+    1. Apply global settings (~/.nwui_global.json) as the base.
+    2. Set all path attributes to point at `project_path`.
+    3. Apply any project-level overrides from config_override.json.
     """
     try:
         import config as nw_config  # noqa: PLC0415
@@ -81,6 +125,12 @@ def apply_config(project_path: str) -> None:
     except ImportError:
         return  # novelwriter not on path yet — will be set up later
 
+    # Layer 1: global defaults
+    for key, value in load_global_config().items():
+        if hasattr(Cfg, key):
+            setattr(Cfg, key, value)
+
+    # Layer 2: project paths
     Cfg.BASE_DIR = project_path
     Cfg.CHARACTERS_FILE = os.path.join(project_path, "characters.json")
     Cfg.WORLD_FILE = os.path.join(project_path, "world.json")
@@ -89,6 +139,7 @@ def apply_config(project_path: str) -> None:
     Cfg.DRAFTS_DIR = os.path.join(project_path, "drafts")
     Cfg.STATE_FILE = os.path.join(project_path, "state.json")
 
+    # Layer 3: project-specific overrides (wins over global for this project)
     for key, value in load_override(project_path).items():
         if hasattr(Cfg, key):
             setattr(Cfg, key, value)

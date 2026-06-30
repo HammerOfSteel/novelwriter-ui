@@ -23,6 +23,7 @@ from starlette.types import Scope
 from backend.routers import status, ollama, project, pipeline, settings, stream, test_connection
 from backend.debug_logger import dlog
 from backend.logger import nwlog
+from backend.config_manager import apply_global_config
 
 
 # ---------------------------------------------------------------------------
@@ -86,6 +87,8 @@ async def _on_startup():
     import logging
     logging.getLogger("novelwriter").setLevel(logging.DEBUG)
     logging.getLogger("uvicorn").setLevel(logging.INFO)
+    # Apply any previously saved global settings before serving any requests
+    apply_global_config()
     from backend.config_manager import get_current_config
     cfg = get_current_config()
     nwlog("server", "STARTUP",

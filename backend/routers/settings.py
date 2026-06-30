@@ -1,5 +1,12 @@
 """
-/api/settings  —  get and update per-project configuration
+/api/settings  —  get and update configuration
+
+Settings are stored in two places:
+  1. ~/NovelWriter/.nwui_global.json   — global, survives restarts, no project needed
+  2. <project>/config_override.json   — project-specific overrides (optional)
+
+POST /api/settings always saves to the global file.
+If a project is currently loaded it also saves to that project's file.
 """
 from typing import Optional, Union
 
@@ -7,7 +14,14 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 import backend.state as state
-from backend.config_manager import get_current_config, save_override, apply_config
+from backend.config_manager import (
+    get_current_config,
+    save_global_config,
+    apply_global_config,
+    save_override,
+    apply_config,
+)
+from backend.logger import nwlog
 
 router = APIRouter()
 
@@ -40,29 +54,23 @@ def get_settings():
 @router.post("/settings")
 def update_settings(body: SettingsBody):
     """
-    Persist settings to the project's config_override.json and apply them.
-    Global-only fields (DEBUG_MODE) are applied to Config even without a project.
+    Save settings globally (always) and to the current project (if loaded).
+    No project is required — backend type, model, API URL etc. are global.
     """
-    project = state.current_project_path
-
-    # Only save fields that were explicitly provided (non-None)
     data = {k: v for k, v in body.dict().items() if v is not None}
     if not data:
         raise HTTPException(status_code=400, detail="No settings provided.")
 
-    # DEBUG_MODE can always be applied in-memory (no project needed)
-    if "DEBUG_MODE" in data and not project:
-        from config import Config  # noqa: PLC0415
-        Config.DEBUG_MODE = bool(data["DEBUG_MODE"])
-        return {"success": True, "saved": {"DEBUG_MODE": data["DEBUG_MODE"]}, "config": get_current_config()}
+    # Always persist to and apply the global config
+    save_global_config(data)
+    apply_global_config()
+    nwlog("settings", "SAVED globally", keys=list(data.keys()))
 
-    if not project:
-        raise HTTPException(
-            status_code=400,
-            detail="No project loaded. Settings are saved per-project.",
-        )
-
-    save_override(project, data)
-    apply_config(project)
+    # Also persist to the current project if one is loaded
+    project = state.current_project_path
+    if project:
+        save_override(project, data)
+        apply_config(project)
+        nwlog("settings", "SAVED to project", project=project)
 
     return {"success": True, "saved": data, "config": get_current_config()}
