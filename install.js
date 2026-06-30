@@ -9,12 +9,13 @@ module.exports = {
         path: "."
       }
     },
-    // 2. Create Python 3.11 virtual environment with uv
+    // 2. Create Python 3.11 virtual environment with uv (skip if already exists)
     {
       method: "shell.run",
       params: {
         message: "uv venv env --python 3.11",
-        path: "."
+        path: ".",
+        when: "{{!exists('env')}}"
       }
     },
     // 3. Install Python backend dependencies
