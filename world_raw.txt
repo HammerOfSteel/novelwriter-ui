@@ -1,0 +1,10 @@
+<think>
+
+</think>
+
+{
+  "location_names": ["The Shifting Sands", "The Obsidian Spire", "The Whispering Trench"],
+  "history": "In the Age of Silence, the sky shattered and fell as debris, creating a fractured world where gravity fluctuates randomly. Ancient guardians known as 'Anchor-Bearers' tried to stabilize reality but were consumed by the chaos, leaving behind the Spire as their last testament.",
+  "magic_system": "Chrono-Resonance",
+  "important_rules": ["Time moves backward every lunar eclipse", "Living beings cannot touch metal without triggering a localized earthquake", "The color blue is invisible to all inhabitants until they drink specific alchemical solutions"]
+}
