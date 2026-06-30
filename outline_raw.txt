@@ -1,0 +1,47 @@
+[
+  {
+    "chapter_id": 1,
+    "chapter_title": "The Blue Hearth",
+    "scenes": [
+      {
+        "scene_id": 1,
+        "title": "The Cellar Floor",
+        "location": "Owain's Home in Arvon, Underground Cellar",
+        "characters_present": ["Owain"],
+        "summary": "Owain sits alone in his family's mine-home. He tends to the Hearthfire, which burns an impossible deep blue instead of orange. He reflects on his father's death and how the fire dims slightly when he feels isolated, establishing the cost of his 'Spark'.",
+        "emotional_tone": "Melancholic / Intimate"
+      },
+      {
+        "scene_id": 2,
+        "title": "The Iron Letter",
+        "location": "Arvon Town Square",
+        "characters_present": ["Owain"],
+        "summary": "A courier delivers an official summons from Solenne Academy. Owain reads the credential offer that promises power but threatens his native culture. He hesitates, feeling the pull of the system versus his home.",
+        "emotional_tone": "Tension / Conflict"
+      }
+    ]
+  },
+  {
+    "chapter_id": 2,
+    "chapter_title": "Leaving the Valley",
+    "scenes": [
+      {
+        "scene_id": 3,
+        "title": "Departure at Dawn",
+        "location": "Arvon Train Station",
+        "characters_present": ["Owain"],
+        "summary": "Owain packs his stone tools and peat smoke pouches. He leaves the hearth unlit for the first time, a physical manifestation of his grief. The landscape outside shifts from slate to polished concrete.",
+        "emotional_tone": "Grief / Transition"
+      },
+      {
+        "scene_id": 4,
+        "title": "The Commute",
+        "location": "Traveling Carriage to Solenne",
+        "characters_present": ["Owain"],
+        "summary": "On the journey, Owain observes the changing architecture of the world. He notes how the 'Old Ways' buildings are being replaced by Valerant-standard structures. He feels a growing sense of displacement.",
+        "emotional_tone": "Melancholic / Atmospheric"
+      }
+    ]
+  },
+  {
+    "chapter

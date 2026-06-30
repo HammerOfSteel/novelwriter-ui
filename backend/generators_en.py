@@ -134,7 +134,11 @@ Output ONLY a valid JSON array — no markdown fences. Format:
   }}
 ]
 All values in English. scene_id must be globally unique and sequential."""
-        response = self._clean_json_response(self.client.generate_text(prompt))
+        # Outline JSON for 10-15 chapters × 3 scenes is large — give it more room.
+        # With thinking OFF this fits; with thinking ON the budget is shared.
+        response = self._clean_json_response(
+            self.client.generate_text(prompt, max_tokens=6000)
+        )
         try:
             outline = json.loads(response)
             self.state_manager.save_outline(outline)
