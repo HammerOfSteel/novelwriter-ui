@@ -1,0 +1,3 @@
+[submodule "novelwriter"]
+	path = novelwriter
+	url = https://github.com/HammerOfSteel/NovelWriter.git
