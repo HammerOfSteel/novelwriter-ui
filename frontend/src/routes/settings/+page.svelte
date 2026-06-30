@@ -63,7 +63,12 @@
 		testing = true;
 		testResult = null;
 		try {
-			testResult = await api.testConnection();
+			testResult = await api.testConnection({
+			BACKEND_TYPE: form.BACKEND_TYPE,
+			OLLAMA_BASE_URL: form.OLLAMA_BASE_URL,
+			API_URL: form.API_URL,
+			API_KEY: form.API_KEY,
+		});
 			if (testResult.models.length > 0) {
 				models = testResult.models;
 				modelsError = '';

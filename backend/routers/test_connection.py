@@ -1,36 +1,63 @@
 """
 /api/test-connection  —  probe the currently configured LLM backend.
 
+Accepts an optional JSON body so the frontend can test with unsaved values:
+  { "BACKEND_TYPE": "api", "API_URL": "http://...", "API_KEY": "..." }
+
 Returns:
   { "status": "ok" | "warn" | "error", "message": str, "models": list[str] }
 """
+from typing import Optional
 import requests as req
 from fastapi import APIRouter
+from pydantic import BaseModel
 
 router = APIRouter()
 
 
+class TestBody(BaseModel):
+    BACKEND_TYPE: Optional[str] = None
+    OLLAMA_BASE_URL: Optional[str] = None
+    API_URL: Optional[str] = None
+    API_KEY: Optional[str] = None
+
+
 @router.post("/test-connection")
-async def test_connection():
-    """Test connectivity to the active LLM backend (Ollama or OpenAI-compatible)."""
-    try:
-        from config import Config  # noqa: PLC0415
-        backend = getattr(Config, "BACKEND_TYPE", "ollama")
-    except ImportError:
-        backend = "ollama"
+async def test_connection(body: TestBody = TestBody()):
+    """Test connectivity — uses body values when provided, falls back to Config."""
+    # Prefer values from the request body (unsaved form state)
+    backend = body.BACKEND_TYPE
+    if backend is None:
+        try:
+            from config import Config  # noqa: PLC0415
+            backend = getattr(Config, "BACKEND_TYPE", "ollama")
+        except ImportError:
+            backend = "ollama"
 
     if backend == "api":
-        return await _test_openai()
-    return await _test_ollama()
+        api_url = body.API_URL
+        api_key = body.API_KEY
+        if api_url is None:
+            try:
+                from config import Config  # noqa: PLC0415
+                api_url = getattr(Config, "API_URL", "http://127.0.0.1:1234")
+                api_key = api_key if api_key is not None else getattr(Config, "API_KEY", "")
+            except ImportError:
+                api_url = "http://127.0.0.1:1234"
+                api_key = ""
+        return await _test_openai(api_url or "http://127.0.0.1:1234", api_key or "")
+
+    ollama_url = body.OLLAMA_BASE_URL
+    if ollama_url is None:
+        try:
+            from config import Config  # noqa: PLC0415
+            ollama_url = Config.OLLAMA_BASE_URL
+        except ImportError:
+            ollama_url = "http://localhost:11434"
+    return await _test_ollama(ollama_url)
 
 
-async def _test_ollama():
-    try:
-        from config import Config  # noqa: PLC0415
-        base_url = Config.OLLAMA_BASE_URL
-    except ImportError:
-        base_url = "http://localhost:11434"
-
+async def _test_ollama(base_url: str):
     try:
         r = req.get(f"{base_url}/api/tags", timeout=5)
         if r.status_code == 200:
@@ -58,15 +85,8 @@ async def _test_ollama():
         return {"status": "error", "message": str(exc), "models": []}
 
 
-async def _test_openai():
-    try:
-        from config import Config  # noqa: PLC0415
-        api_url = getattr(Config, "API_URL", "http://127.0.0.1:1234").rstrip("/")
-        api_key = getattr(Config, "API_KEY", "")
-    except ImportError:
-        api_url = "http://127.0.0.1:1234"
-        api_key = ""
-
+async def _test_openai(api_url: str, api_key: str):
+    api_url = api_url.rstrip("/")
     headers = {}
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"

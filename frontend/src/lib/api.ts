@@ -173,7 +173,8 @@ export const api = {
 	// Settings
 	getSettings: () => get<Settings>('/settings'),
 	saveSettings: (body: Partial<Settings>) => post<{ success: boolean; config: Settings }>('/settings', body),
-	testConnection: () => post<TestConnectionResult>('/test-connection'),
+	testConnection: (body: { BACKEND_TYPE?: string; OLLAMA_BASE_URL?: string; API_URL?: string; API_KEY?: string }) =>
+		post<TestConnectionResult>('/test-connection', body),
 
 	// Job status
 	jobStatus: () => get<JobStatus>('/job/status')
