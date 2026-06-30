@@ -104,15 +104,13 @@
 			>
 				Home
 			</a>
-			{#if $project.loaded}
-				<a
-					href="/project"
-					class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors
-					{currentPath.startsWith('/project') ? 'bg-violet-600/20 text-violet-400' : 'text-ink-300 hover:text-ink-100 hover:bg-base-800'}"
-				>
-					{$project.name ?? 'Project'}
-				</a>
-			{/if}
+			<a
+				href="/books"
+				class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors
+				{currentPath.startsWith('/books') ? 'bg-violet-600/20 text-violet-400' : 'text-ink-300 hover:text-ink-100 hover:bg-base-800'}"
+			>
+				Books
+			</a>
 			<a
 				href="/settings"
 				class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors

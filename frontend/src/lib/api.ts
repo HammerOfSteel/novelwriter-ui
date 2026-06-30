@@ -52,6 +52,17 @@ const get = <T>(path: string) => _fetch<T>(path);
 // Types
 // ---------------------------------------------------------------------------
 
+export interface ProjectSummary {
+	name: string;
+	path: string;
+	stage: string;
+	is_imported: boolean;
+	is_current: boolean;
+	total_scenes: number;
+	written_scenes: number;
+	created_at: number | null;
+}
+
 export interface StatusResponse {
 	ollama: boolean;
 	deps: boolean;
@@ -152,6 +163,9 @@ export interface JobStatus {
 // ---------------------------------------------------------------------------
 
 export const api = {
+	// Projects list
+	listProjects: () => get<{ projects: ProjectSummary[] }>('/projects'),
+
 	// Status
 	status: () => get<StatusResponse>('/status'),
 	installPrereqs: () => post<{ success: boolean; output: string }>('/prereqs/install'),

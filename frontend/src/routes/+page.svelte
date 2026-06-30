@@ -36,7 +36,7 @@
 				project_dir: projectDir || undefined
 			});
 			project.set({ loaded: true, path: result.path, name: result.name, stage: result.stage as any });
-			goto('/project');
+			goto('/books');
 		} catch (e: unknown) {
 			createError = e instanceof Error ? e.message : String(e);
 		} finally {
@@ -103,7 +103,7 @@
 			const result = await api.loadProject(openPath.trim());
 			const state = await api.projectState();
 			project.set(state);
-			goto('/project');
+			goto('/books');
 		} catch (e: unknown) {
 			importError = e instanceof Error ? e.message : String(e);
 		} finally {
@@ -122,7 +122,7 @@
 			});
 			const state = await api.projectState();
 			project.set(state);
-			goto('/project');
+			goto('/books');
 		} catch (e: unknown) {
 			importError = e instanceof Error ? e.message : String(e);
 		} finally {

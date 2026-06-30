@@ -1,6 +1,7 @@
 """
 Project management endpoints:
 
+  GET  /api/projects               — list all projects in ~/NovelWriter
   GET  /api/project/state          — current project state
   POST /api/project/new            — create a brand-new project
   POST /api/project/load           — load an existing NovelWriter project
@@ -229,6 +230,71 @@ def _load_project_state(path: str) -> dict:
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
+
+@router.get("/projects")
+def list_projects():
+    """List all NovelWriter projects found under ~/NovelWriter."""
+    base = os.path.expanduser("~/NovelWriter")
+    if not os.path.isdir(base):
+        return {"projects": []}
+
+    projects = []
+    try:
+        entries = sorted(os.listdir(base))
+    except OSError:
+        return {"projects": []}
+
+    for name in entries:
+        path = os.path.join(base, name)
+        if not os.path.isdir(path):
+            continue
+        has_idea = os.path.exists(os.path.join(path, "idea.md"))
+        has_import = os.path.exists(os.path.join(path, "import_meta.json"))
+        if not (has_idea or has_import):
+            continue
+
+        stage = _detect_stage(path)
+        total_scenes = 0
+        written_scenes = 0
+        outline_path = os.path.join(path, "outline.json")
+        if os.path.exists(outline_path):
+            try:
+                with open(outline_path, encoding="utf-8") as f:
+                    outline = json.load(f)
+                drafts = os.path.join(path, "drafts")
+                for ch in outline:
+                    for sc in ch.get("scenes", []):
+                        total_scenes += 1
+                        sid = sc.get("scene_id")
+                        if sid and os.path.exists(os.path.join(drafts, f"scene_{sid}.md")):
+                            written_scenes += 1
+            except (OSError, json.JSONDecodeError, TypeError):
+                pass
+
+        created_at = None
+        try:
+            created_at = int(os.path.getctime(path) * 1000)
+        except OSError:
+            pass
+
+        projects.append({
+            "name": name,
+            "path": path,
+            "stage": stage,
+            "is_imported": has_import,
+            "is_current": path == state.current_project_path,
+            "total_scenes": total_scenes,
+            "written_scenes": written_scenes,
+            "created_at": created_at,
+        })
+
+    # Most-recently-created first
+    projects.sort(key=lambda p: p.get("created_at") or 0, reverse=True)
+    return {"projects": projects}
+
+
+
 
 
 @router.get("/project/state")
