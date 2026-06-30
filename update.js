@@ -4,7 +4,8 @@ module.exports = {
     {
       method: "shell.run",
       params: {
-        message: "git pull",
+        // Use explicit remote/branch to avoid "no tracking info" errors
+        message: "git pull origin main",
         path: "."
       }
     },
@@ -19,6 +20,8 @@ module.exports = {
       method: "shell.run",
       params: {
         venv: "env",
+        // Unset any stale VIRTUAL_ENV from a previous bad install
+        env: { VIRTUAL_ENV: "" },
         message: "uv pip install -r requirements.txt",
         path: "."
       }
