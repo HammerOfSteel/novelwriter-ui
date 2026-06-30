@@ -22,6 +22,7 @@ from starlette.types import Scope
 
 from backend.routers import status, ollama, project, pipeline, settings, stream, test_connection
 from backend.debug_logger import dlog
+from backend.logger import nwlog
 
 
 # ---------------------------------------------------------------------------
@@ -83,10 +84,15 @@ app.include_router(stream.router, prefix="/api", tags=["stream"])
 @app.on_event("startup")
 async def _on_startup():
     import logging
-    logging.getLogger("novelwriter.debug").setLevel(logging.DEBUG)
-    # Ensure uvicorn propagates debug logs
+    logging.getLogger("novelwriter").setLevel(logging.DEBUG)
     logging.getLogger("uvicorn").setLevel(logging.INFO)
-    dlog("server", event="startup", root=str(_ROOT))
+    from backend.config_manager import get_current_config
+    cfg = get_current_config()
+    nwlog("server", "STARTUP",
+          backend=cfg.get("BACKEND_TYPE"),
+          api_url=cfg.get("API_URL"),
+          model=cfg.get("API_MODEL") or cfg.get("DEFAULT_MODEL"),
+          debug=cfg.get("DEBUG_MODE"))
 
 # ---------------------------------------------------------------------------
 # Static file serving (SPA fallback)

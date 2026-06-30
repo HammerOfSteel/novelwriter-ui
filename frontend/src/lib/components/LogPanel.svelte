@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { jobLogs, jobStatus, logPanelOpen, clearLogs, isJobRunning } from '$lib/stores';
-	import { afterUpdate, tick } from 'svelte';
+	import { afterUpdate } from 'svelte';
 
 	let logContainer: HTMLDivElement;
 	let autoScroll = true;
 
-	afterUpdate(async () => {
+	// NOTE: do NOT use async + tick() here — it re-queues itself on every
+	// Svelte update cycle and causes a microtask flood that freezes the tab.
+	afterUpdate(() => {
 		if (autoScroll && logContainer) {
-			await tick();
 			logContainer.scrollTop = logContainer.scrollHeight;
 		}
 	});

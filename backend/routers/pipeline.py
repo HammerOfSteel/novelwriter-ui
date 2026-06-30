@@ -19,6 +19,7 @@ from pydantic import BaseModel
 import backend.state as state
 from backend.config_manager import get_current_config
 from backend.debug_logger import dlog
+from backend.logger import nwlog
 
 router = APIRouter()
 
@@ -275,10 +276,14 @@ def _assert_project():
 
 def _submit(func, *args, name: str):
     runner = state.get_job_runner()
-    dlog("pipeline.submit", job=name, project=state.current_project_path)
+    cfg = get_current_config()
+    nwlog("pipeline", f"SUBMIT {name!r}",
+          project=state.current_project_path,
+          backend=cfg.get("BACKEND_TYPE"),
+          model=cfg.get("API_MODEL") or cfg.get("DEFAULT_MODEL"))
     ok = runner.submit(func, *args, name=name)
     if not ok:
-        dlog("pipeline.submit", job=name, rejected=True, running=runner.job_name)
+        nwlog("pipeline", f"REJECTED {name!r} — already running: {runner.job_name!r}")
         raise HTTPException(status_code=409, detail="Another job is already running.")
     return {"queued": True, "job": name}
 
