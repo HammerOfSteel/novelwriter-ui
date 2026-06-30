@@ -1,10 +1,9 @@
-// update.js — pull latest code and rebuild
+// update.js — pull latest code, rebuild, and restart the server
 module.exports = {
   run: [
     {
       method: "shell.run",
       params: {
-        // Use explicit remote/branch to avoid "no tracking info" errors
         message: "git pull origin main",
         path: "."
       }
@@ -20,7 +19,6 @@ module.exports = {
       method: "shell.run",
       params: {
         venv: "env",
-        // Unset any stale VIRTUAL_ENV from a previous bad install
         env: { VIRTUAL_ENV: "" },
         message: "uv pip install -r requirements.txt",
         path: "."
@@ -31,6 +29,19 @@ module.exports = {
       params: {
         message: "npm install && npm run build",
         path: "frontend"
+      }
+    },
+    // Stop the running server (if any) and restart it so new code takes effect
+    {
+      method: "script.stop",
+      params: {
+        uri: "start.js"
+      }
+    },
+    {
+      method: "script.start",
+      params: {
+        uri: "start.js"
       }
     }
   ]
